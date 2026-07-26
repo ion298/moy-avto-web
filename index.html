@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мой Авто — учёт расходов на автомобиль</title>
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Мой Авто">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --bg:#0f1115; --bg-soft:#161a21; --card:#1b212b; --card-2:#222a36; --line:#2b3340;
+    --txt:#e8edf4; --txt-dim:#9aa6b6; --txt-faint:#6b7686;
+    --accent:#5b8cff; --accent-2:#8b5bff; --green:#2dd4a7; --amber:#f5b455; --red:#ff6b6b;
+    --deep:#1f3a8a; --deep-2:#3b1f7a;
+    --radius:16px; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--font);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(91,140,255,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(139,91,255,.10), transparent 55%),
+      var(--bg);
+    color:var(--txt);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,select,textarea{font-family:inherit;}
+  .hidden{display:none !important;}
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{width:240px;flex-shrink:0;background:linear-gradient(180deg,var(--bg-soft),rgba(22,26,33,.6));
+    border-right:1px solid var(--line);padding:26px 18px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;}
+  .brand{display:flex;align-items:center;gap:11px;padding:0 8px 22px;}
+  .brand .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--deep),var(--deep-2));
+    display:grid;place-items:center;font-size:19px;box-shadow:0 6px 16px rgba(31,58,138,.55);}
+  .brand h1{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+  .brand span{font-size:11px;color:var(--txt-faint);font-weight:500;display:block;margin-top:1px;}
+  .nav-btn{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;color:var(--txt-dim);font-size:14.5px;font-weight:600;text-align:left;transition:.15s;width:100%;}
+  .nav-btn .ico{font-size:17px;width:20px;text-align:center;}
+  .nav-btn:hover{background:var(--card);color:var(--txt);}
+  .nav-btn.active{background:linear-gradient(135deg,rgba(91,140,255,.18),rgba(139,91,255,.14));color:var(--txt);box-shadow:inset 0 0 0 1px rgba(91,140,255,.25);}
+  .add-btn{margin-top:14px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:14px;
+    padding:12px;border-radius:12px;box-shadow:0 8px 20px rgba(91,140,255,.4);transition:.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .add-btn:hover{transform:translateY(-1px);filter:brightness(1.07);}
+  .sidebar-foot{margin-top:auto;font-size:11px;color:var(--txt-faint);padding:0 8px;line-height:1.5;}
+  .gear{margin-top:8px;font-size:12.5px;color:var(--txt-faint);padding:8px;border-radius:9px;display:flex;align-items:center;gap:8px;font-weight:600;}
+  .gear:hover{background:var(--card);color:var(--txt);}
+
+  /* ============ MAIN ============ */
+  .main{flex:1;padding:26px 40px 60px;max-width:1180px;width:100%;margin:0 auto;}
+
+  /* ============ CAR PROFILE ============ */
+  .car-card{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,var(--card),var(--card-2));
+    border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px;margin-bottom:26px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .car-card::after{content:"";position:absolute;inset:0;background:radial-gradient(600px 200px at 100% 0%, rgba(91,140,255,.10), transparent 70%);pointer-events:none;}
+  .car-photo{width:88px;height:64px;border-radius:12px;flex-shrink:0;background:var(--bg-soft);box-shadow:inset 0 0 0 1px var(--line);
+    display:grid;place-items:center;font-size:32px;overflow:hidden;cursor:pointer;position:relative;z-index:1;}
+  .car-photo img{width:100%;height:100%;object-fit:cover;}
+  .car-photo:hover{box-shadow:inset 0 0 0 1px var(--accent);}
+  .car-info{flex:1;min-width:0;position:relative;z-index:1;}
+  .car-info h2{font-size:20px;font-weight:740;letter-spacing:-.4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .plate{font-family:"SF Mono",ui-monospace,monospace;font-size:12.5px;font-weight:700;letter-spacing:.5px;
+    background:#e8edf4;color:#11151c;padding:3px 9px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  .car-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;}
+  .car-meta .m{font-size:12px;color:var(--txt-faint);font-weight:600;}
+  .car-meta .m b{display:block;font-size:16px;color:var(--txt);font-weight:740;letter-spacing:-.3px;margin-top:2px;}
+  .car-meta .m b.acc{color:var(--accent);}
+  .car-edit{position:relative;z-index:1;flex-shrink:0;}
+
+  /* ============ COMMON ============ */
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px;}
+  .page-head h2{font-size:27px;font-weight:700;letter-spacing:-.5px;}
+  .page-head p{color:var(--txt-dim);font-size:14px;margin-top:4px;}
+  .btn{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:600;font-size:14px;
+    padding:11px 18px;border-radius:11px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(91,140,255,.35);transition:.15s;}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.07);}
+  .btn.ghost{background:var(--card);box-shadow:inset 0 0 0 1px var(--line);color:var(--txt);}
+  .btn.ghost:hover{background:var(--card-2);}
+  .btn.sm{padding:7px 12px;font-size:13px;border-radius:9px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
+  .section-title{font-size:16px;font-weight:700;margin:28px 0 14px;display:flex;align-items:center;gap:9px;}
+  .section-title .count{font-size:12px;color:var(--txt-faint);background:var(--card-2);padding:2px 9px;border-radius:20px;font-weight:600;}
+  .section-title .grow{flex:1;}
+  .section-title .mini-link{font-size:12.5px;color:var(--accent);font-weight:600;cursor:pointer;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:980px){.two-col{grid-template-columns:1fr;}}
+  .empty{text-align:center;padding:50px 20px;color:var(--txt-faint);}
+  .empty .ico{font-size:42px;opacity:.5;margin-bottom:12px;}
+  .empty p{font-size:14px;}
+  .filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+  select.sel{appearance:none;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);color:var(--txt);
+    padding:9px 30px 9px 13px;border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;outline:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa6b6' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center;}
+  input.sel{background:var(--card);box-shadow:inset 0 0 0 1px var(--line);color:var(--txt);border:none;outline:none;
+    padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:600;}
+  .search{flex:1;min-width:180px;max-width:280px;}
+
+  /* ============ STATS ============ */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;}
+  .stat .lbl{font-size:12px;color:var(--txt-dim);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .stat .val{font-size:29px;font-weight:760;margin-top:8px;letter-spacing:-1px;white-space:nowrap;}
+  .stat .val small{font-size:15px;color:var(--txt-dim);font-weight:600;letter-spacing:0;}
+  .stat .sub{font-size:12.5px;color:var(--txt-faint);margin-top:3px;}
+  .stat .corner{position:absolute;top:14px;right:16px;font-size:22px;opacity:.5;}
+
+  /* ============ TAG CHIPS (яркие бирки) ============ */
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;
+    background:color-mix(in srgb,var(--tg) 20%,transparent);color:var(--tg);
+    box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tg) 42%,transparent);white-space:nowrap;}
+  .tag.lg{font-size:13px;padding:5px 13px;}
+
+  /* ============ TAG BREAKDOWN ============ */
+  .tb-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:.12s;}
+  .tb-row:last-child{border-bottom:none;}
+  .tb-row:hover{padding-left:4px;}
+  .tb-name{min-width:150px;display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;}
+  .tb-name .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .tb-bar{flex:1;height:8px;background:var(--bg-soft);border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line);}
+
+  /* ============ МОБИЛЬНАЯ РАСКЛАДКА (телефон) ============ */
+  @media (max-width:700px){
+    body{flex-direction:column;}
+    .sidebar{
+      position:fixed;left:0;right:0;bottom:0;top:auto;
+      width:100%;height:auto;flex-direction:row;gap:4px;
+      padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+      border-right:none;border-top:1px solid var(--line);
+      background:rgba(22,26,33,.96);backdrop-filter:blur(12px);
+      justify-content:space-around;align-items:stretch;z-index:60;
+    }
+    .brand,.sidebar-foot,.gear{display:none;}
+    .nav-btn{flex:1;flex-direction:column;gap:2px;padding:7px 2px;font-size:10px;justify-content:center;border-radius:12px;}
+    .nav-btn .ico{font-size:21px;width:auto;}
+    .add-btn{flex:0 0 auto;margin-top:0;padding:0 18px;border-radius:14px;font-size:0;box-shadow:0 6px 16px rgba(91,140,255,.45);}
+    .add-btn span{font-size:26px !important;}
+    .main{padding:16px 14px calc(96px + env(safe-area-inset-bottom,0px));max-width:100%;}
+    .page-head{margin-bottom:16px;}
+    .page-head h2{font-size:22px;}
+    .stat-grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .stat .val{font-size:24px;}
+    .car-card{padding:14px 16px;gap:12px;}
+    .filter-bar{gap:8px;}
+    .search{max-width:100%;}
+  }
+  .tb-bar > i{display:block;height:100%;border-radius:20px;transition:width .5s;}
+  .tb-val{width:135px;text-align:right;font-size:13px;font-weight:700;white-space:nowrap;}
+  .tb-val .pc{font-size:11.5px;color:var(--txt-faint);font-weight:600;margin-left:6px;}
+
+  /* ============ BARS (по месяцам) ============ */
+  .bars{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:10px;}
+  .bars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end;min-width:0;}
+  .bars .col .stack{width:100%;max-width:46px;background:var(--bg-soft);border-radius:8px 8px 4px 4px;display:flex;flex-direction:column;justify-content:flex-end;
+    height:100%;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line);transition:.15s;}
+  .bars .col:hover .stack{box-shadow:inset 0 0 0 1px var(--accent);}
+  .bars .col .stack > i{display:block;background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:6px 6px 0 0;transition:height .5s;}
+  .bars .col .cl{font-size:11px;color:var(--txt-dim);font-weight:600;white-space:nowrap;}
+  .bars .col .cv{font-size:11px;color:var(--txt);font-weight:700;white-space:nowrap;}
+
+  /* ============ EXPENSE FEED ============ */
+  .hist-date{font-size:12px;color:var(--txt-faint);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:24px 2px 10px;display:flex;align-items:center;gap:10px;}
+  .hist-date .hs{color:var(--txt-dim);font-weight:700;letter-spacing:0;text-transform:none;font-size:12.5px;}
+  .exp{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;transition:.15s;cursor:pointer;}
+  .exp:hover{border-color:#3a4452;transform:translateY(-1px);}
+  .exp .eico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:21px;flex-shrink:0;
+    background:color-mix(in srgb,var(--tg) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tg) 34%,transparent);}
+  .exp .ebody{flex:1;min-width:0;}
+  .exp .etitle{font-size:15px;font-weight:700;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .exp .emeta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+  .exp .enote{font-size:12.5px;color:var(--txt-faint);margin-top:8px;font-style:italic;}
+  .exp .eitems{font-size:12.5px;color:var(--txt-dim);margin-top:7px;line-height:1.6;}
+  .exp .eitems .li{display:flex;gap:8px;}
+  .exp .eitems .li .n{flex:1;}
+  .exp .eitems .li .p{font-weight:700;color:var(--txt);white-space:nowrap;}
+  .exp .esum{flex-shrink:0;text-align:right;}
+  .exp .esum .amt{font-size:19px;font-weight:760;letter-spacing:-.5px;white-space:nowrap;}
+  .exp .esum .acts{display:flex;gap:2px;justify-content:flex-end;margin-top:6px;}
+  .chip{display:inline-flex;align-items:center;gap:5px;background:var(--card-2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;color:var(--txt-dim);}
+  .chip b{color:var(--txt);font-weight:700;}
+  .icon-btn{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--txt-faint);font-size:14px;transition:.15s;}
+  .icon-btn:hover{background:var(--card-2);color:var(--txt);}
+  .thumbs{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+  .thumb{width:46px;height:46px;border-radius:9px;background:var(--bg-soft);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;
+    display:grid;place-items:center;font-size:17px;cursor:pointer;position:relative;transition:.15s;}
+  .thumb:hover{box-shadow:inset 0 0 0 1px var(--accent);transform:translateY(-1px);}
+  .thumb img{width:100%;height:100%;object-fit:cover;}
+  .thumb .x{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;
+    font-size:11px;display:grid;place-items:center;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.5);}
+
+  /* ============ MODAL ============ */
+  .overlay{position:fixed;inset:0;background:rgba(8,10,14,.6);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:50;padding:20px;}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:20px;width:100%;max-width:560px;box-shadow:0 30px 80px rgba(0,0,0,.55);
+    overflow:hidden;animation:pop .2s ease;max-height:92vh;display:flex;flex-direction:column;}
+  .modal.wide{max-width:680px;}
+  @keyframes pop{from{transform:scale(.96) translateY(8px);opacity:0;}to{transform:none;opacity:1;}}
+  .modal-head{padding:22px 24px 0;}
+  .modal-head h3{font-size:19px;font-weight:700;}
+  .modal-head p{color:var(--txt-dim);font-size:13px;margin-top:4px;}
+  .modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+  .modal-foot{padding:14px 24px 22px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line);align-items:center;}
+  .field label{display:block;font-size:12.5px;color:var(--txt-dim);font-weight:600;margin-bottom:7px;}
+  .field input,.field select,.field textarea{width:100%;background:var(--bg-soft);border:1px solid var(--line);color:var(--txt);
+    padding:11px 13px;border-radius:10px;font-size:14px;outline:none;transition:.15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+  .field select{appearance:none;-webkit-appearance:none;padding-right:36px;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239aa6b6' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 13px center;}
+  .field .hint{font-size:11.5px;color:var(--txt-faint);margin-top:6px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  .link-danger{color:var(--red);font-size:13px;font-weight:600;margin-right:auto;}
+  .link-danger:hover{text-decoration:underline;}
+  .big-amount input{font-size:26px !important;font-weight:760 !important;letter-spacing:-.5px;padding:14px 13px !important;}
+
+  /* tag picker */
+  .tag-pick-group{margin-bottom:6px;}
+  .tp-label{font-size:11.5px;color:var(--txt-faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+  .tag-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;}
+  .tag-pick button{padding:14px 8px;border-radius:13px;background:var(--bg-soft);border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--txt-dim);transition:.15s;}
+  .tag-pick button .ti{font-size:24px;}
+  .tag-pick button:hover{transform:translateY(-2px);color:var(--txt);border-color:var(--tg);}
+  .tag-pick button.on{color:#fff;border-color:var(--tg);background:color-mix(in srgb,var(--tg) 24%,transparent);
+    box-shadow:inset 0 0 0 1px var(--tg),0 6px 18px color-mix(in srgb,var(--tg) 26%,transparent);}
+
+  /* items editor (акт автосервиса) */
+  .items-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:12px;}
+  .items-head{display:grid;grid-template-columns:96px 1fr 62px 104px 30px;gap:8px;font-size:10.5px;color:var(--txt-faint);
+    font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:0 2px 8px;}
+  .items-head span:nth-child(3),.items-head span:nth-child(4){text-align:right;}
+  .item-row{display:grid;grid-template-columns:96px 1fr 62px 104px 30px;gap:8px;margin-bottom:8px;align-items:center;}
+  .item-row input,.item-row select{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:9px 10px;
+    border-radius:9px;font-size:13.5px;outline:none;width:100%;transition:.15s;}
+  .item-row input:focus,.item-row select:focus{border-color:var(--accent);}
+  .item-row input.num{text-align:right;}
+  .item-row select{appearance:none;-webkit-appearance:none;cursor:pointer;font-weight:600;font-size:12.5px;padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7686' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 7px center;}
+  .item-del{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--txt-faint);font-size:15px;transition:.15s;}
+  .item-del:hover{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red);}
+  .items-add{display:flex;gap:8px;margin-top:4px;}
+  .items-add button{font-size:12.5px;color:var(--accent);font-weight:700;padding:7px 11px;border-radius:9px;background:var(--card);
+    box-shadow:inset 0 0 0 1px var(--line);transition:.15s;}
+  .items-add button:hover{background:var(--card-2);}
+  .items-total{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .items-total .tl{font-size:13px;color:var(--txt-dim);font-weight:600;}
+  .items-total .tv{font-size:22px;font-weight:760;letter-spacing:-.5px;}
+  .items-total .tv small{font-size:12px;color:var(--txt-faint);font-weight:600;margin-left:7px;letter-spacing:0;}
+
+  /* file drop */
+  .drop{border:1.5px dashed var(--line);border-radius:12px;padding:16px;text-align:center;transition:.15s;cursor:pointer;background:var(--bg-soft);}
+  .drop:hover,.drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--bg-soft));}
+  .drop .di{font-size:22px;opacity:.6;}
+  .drop .dt{font-size:12.5px;color:var(--txt-dim);font-weight:600;margin-top:5px;}
+  .drop .dh{font-size:11px;color:var(--txt-faint);margin-top:3px;}
+
+  /* swatches */
+  .swatches{display:flex;gap:9px;flex-wrap:wrap;}
+  .swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;transition:.12s;}
+  .swatches button.on{border-color:var(--txt);transform:scale(1.12);}
+  .seg{display:flex;gap:8px;}
+  .seg button{flex:1;padding:11px;border-radius:10px;background:var(--bg-soft);box-shadow:inset 0 0 0 1px var(--line);
+    font-size:13px;font-weight:700;color:var(--txt-dim);transition:.15s;}
+  .seg button.on{color:var(--txt);background:color-mix(in srgb,var(--accent) 16%,transparent);box-shadow:inset 0 0 0 1px var(--accent);}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .chk{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:10px;background:var(--bg-soft);
+    box-shadow:inset 0 0 0 1px var(--line);font-size:13px;font-weight:600;color:var(--txt-dim);cursor:pointer;transition:.15s;}
+  .chk:hover{color:var(--txt);}
+  .chk.on{color:var(--txt);background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:inset 0 0 0 1px rgba(91,140,255,.45);}
+  .chk .bx{width:17px;height:17px;border-radius:5px;box-shadow:inset 0 0 0 1.5px var(--line);display:grid;place-items:center;font-size:11px;flex-shrink:0;background:var(--card);}
+  .chk.on .bx{background:var(--accent);box-shadow:none;color:#fff;}
+
+  /* settings tag cards */
+  .tag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .tag-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;transition:.15s;}
+  .tag-card:hover{transform:translateY(-2px);border-color:#3a4452;}
+  .tag-card .stripe{height:4px;background:var(--tg);}
+  .tag-card .tc-in{padding:14px 16px;}
+  .tag-card .tc-top{display:flex;align-items:center;gap:10px;}
+  .tag-card .tc-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px;flex-shrink:0;
+    background:color-mix(in srgb,var(--tg) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--tg) 34%,transparent);}
+  .tag-card .tc-n{font-size:14.5px;font-weight:700;flex:1;min-width:0;}
+  .tag-card .tc-mode{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;}
+  .tc-mode.simple{background:color-mix(in srgb,var(--green) 16%,transparent);color:var(--green);}
+  .tc-mode.complex{background:color-mix(in srgb,var(--amber) 16%,transparent);color:var(--amber);}
+  .tag-card .tc-f{font-size:11.5px;color:var(--txt-faint);margin-top:10px;line-height:1.5;}
+  .tag-add{border:1.5px dashed var(--line);border-radius:14px;display:grid;place-items:center;min-height:110px;
+    color:var(--txt-faint);font-size:13px;font-weight:700;transition:.15s;background:transparent;}
+  .tag-add:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(6,8,11,.94);z-index:200;display:flex;flex-direction:column;animation:fade .15s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .lb-bar{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .lb-bar .nm{flex:1;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lb-bar .ct{font-size:12.5px;color:var(--txt-faint);font-weight:600;}
+  .lb-x{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:19px;color:var(--txt-dim);transition:.15s;}
+  .lb-x:hover{background:var(--card);color:var(--txt);}
+  .lb-body{flex:1;display:grid;place-items:center;overflow:auto;padding:20px;min-height:0;}
+  .lb-body img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  .lb-body iframe,.lb-body embed{width:100%;height:100%;border:none;border-radius:10px;background:#fff;}
+  .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(27,33,43,.9);
+    box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center;font-size:20px;color:var(--txt);transition:.15s;}
+  .lb-nav:hover{background:var(--card-2);}
+  .lb-nav.prev{left:20px;} .lb-nav.next{right:20px;}
+
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);
+    padding:12px 20px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 14px 40px rgba(0,0,0,.5);z-index:300;
+    animation:up .2s ease;display:flex;align-items:center;gap:9px;}
+  @keyframes up{from{transform:translate(-50%,10px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+</style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">🚗</div>
+      <div><h1>Мой Авто</h1><span>учёт расходов</span></div>
+    </div>
+    <button class="nav-btn active" data-view="dashboard" onclick="showView('dashboard')"><span class="ico">📊</span> Дашборд</button>
+    <button class="nav-btn" data-view="history" onclick="showView('history')"><span class="ico">🧾</span> Расходы</button>
+    <button class="nav-btn" data-view="settings" onclick="showView('settings')"><span class="ico">⚙️</span> Настройки</button>
+    <button class="add-btn" onclick="openExpenseModal()"><span style="font-size:17px;">＋</span> Добавить расход</button>
+    <div class="sidebar-foot"><span id="syncDot">☁︎ синхрон</span> · данные в облаке<br><span id="footStats"></span></div>
+  </aside>
+
+  <main class="main">
+    <div id="carCard"></div>
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard">
+      <div class="page-head">
+        <div><h2>Дашборд</h2><p id="dashSub">Обзор расходов на автомобиль</p></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <select id="periodSel" class="sel" onchange="onPeriodChange()"></select>
+          <span id="customRange" class="hidden" style="display:flex;gap:8px;align-items:center;">
+            <input type="date" id="cFrom" class="sel" onchange="renderDashboard()">
+            <span style="color:var(--txt-faint)">—</span>
+            <input type="date" id="cTo" class="sel" onchange="renderDashboard()">
+          </span>
+        </div>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="section-title">Расходы по тегам <span class="count" id="tagScope"></span></div>
+      <div class="card" id="tagBreakdown"></div>
+
+      <div class="two-col" style="margin-top:18px;">
+        <div class="card">
+          <div class="section-title" style="margin:0 0 4px;">Динамика по месяцам</div>
+          <p style="font-size:12.5px;color:var(--txt-faint);margin-bottom:4px;">Сумма расходов в месяц</p>
+          <div class="bars" id="monthBars"></div>
+        </div>
+        <div class="card" id="fuelCard"></div>
+      </div>
+
+      <div class="section-title">Последние расходы <span class="grow"></span><span class="mini-link" onclick="showView('history')">Вся история →</span></div>
+      <div id="dashRecent"></div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="view-history" class="hidden">
+      <div class="page-head">
+        <div><h2>Расходы</h2><p id="histSub">Лента всех трат по датам</p></div>
+        <button class="btn" onclick="openExpenseModal()"><span>＋</span> Расход</button>
+      </div>
+      <div class="filter-bar">
+        <input type="search" id="histQ" class="sel search" placeholder="🔍  Поиск: деталь, услуга, место…" oninput="renderHistory()">
+        <select id="histTag" class="sel" onchange="renderHistory()"></select>
+        <select id="histPeriod" class="sel" onchange="renderHistory()">
+          <option value="all">За всё время</option>
+          <option value="month">Текущий месяц</option>
+          <option value="30">Последние 30 дней</option>
+          <option value="90">Последние 90 дней</option>
+          <option value="year">Текущий год</option>
+        </select>
+        <span class="grow" style="flex:1"></span>
+        <span id="histTotal" style="font-size:13px;color:var(--txt-dim);font-weight:700;"></span>
+      </div>
+      <div id="histList"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" class="hidden">
+      <div class="page-head">
+        <div><h2>Настройки</h2><p>Теги, поля под теги, карточка авто и данные</p></div>
+      </div>
+      <div class="section-title" style="margin-top:0;">Теги <span class="count" id="tagCount"></span>
+        <span class="grow"></span>
+        <span style="font-size:12.5px;color:var(--txt-faint);font-weight:600;">Клик по тегу — настроить поля</span>
+      </div>
+      <div class="tag-grid" id="tagSettings"></div>
+
+      <div class="section-title">Автомобиль</div>
+      <div class="card" id="carSettings"></div>
+
+      <div class="section-title">Данные</div>
+      <div class="card">
+        <p style="font-size:13px;color:var(--txt-dim);line-height:1.6;margin-bottom:14px;">
+          Все расходы, теги и вложения хранятся локально на этом маке. Резервную копию можно выгрузить в JSON,
+          а таблицу расходов — в CSV (открывается в Excel и Numbers).
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn ghost sm" onclick="exportJSON()">💾 Резервная копия (JSON)</button>
+          <button class="btn ghost sm" onclick="exportCSV()">📊 Таблица расходов (CSV)</button>
+          <button class="btn ghost sm" onclick="document.getElementById('impFile').click()">📥 Восстановить из JSON</button>
+          <input type="file" id="impFile" accept="application/json,.json" class="hidden" onchange="importJSON(this)">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalRoot"></div>
+  <div id="lbRoot"></div>
+  <div id="toastRoot"></div>
+
+<script>
+/* ================================================================ ХРАНИЛИЩЕ ФАЙЛОВ (IndexedDB)
+   Фото и PDF лежат в IndexedDB как Blob — в localStorage они бы не поместились (лимит ~5 МБ). */
+const DB_NAME="moy_avto_files", STORE="files";
+let _db=null;
+function idb(){
+  if(_db)return Promise.resolve(_db);
+  return new Promise((res,rej)=>{
+    const r=indexedDB.open(DB_NAME,1);
+    r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:"id"});};
+    r.onsuccess=()=>{_db=r.result;res(_db);};
+    r.onerror=()=>rej(r.error);
+  });
+}
+async function fileSave(file){
+  const db=await idb(), id=uid()+uid();
+  const rec={id,name:file.name,type:file.type||"application/octet-stream",size:file.size,blob:file};
+  await new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(rec);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+  return {id,name:rec.name,type:rec.type,size:rec.size};
+}
+async function fileGet(id){
+  const db=await idb();
+  return new Promise((res,rej)=>{const rq=db.transaction(STORE,"readonly").objectStore(STORE).get(id);rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>rej(rq.error);});
+}
+async function fileDel(id){
+  const db=await idb();
+  return new Promise((res)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).delete(id);tx.oncomplete=res;tx.onerror=res;});
+}
+const _urls=new Map();
+async function fileURL(id){
+  if(_urls.has(id))return _urls.get(id);
+  const r=await fileGet(id);if(!r)return null;
+  const u=URL.createObjectURL(r.blob);_urls.set(id,u);return u;
+}
+
+/* ================================================================ ДАННЫЕ */
+const STORE_KEY="moy_avto_v1";
+const COLORS=["#5b8cff","#ff6b6b","#2dd4a7","#f5b455","#8b5bff","#56c2ff","#ff8fb1","#9aa6b6","#4ade80","#fb923c"];
+const MONTHS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+const ALL_FIELDS=[
+  {k:"items",   n:"Позиции (детали / работы)"},
+  {k:"place",   n:"Место ремонта"},
+  {k:"odometer",n:"Пробег"},
+  {k:"liters",  n:"Литры и цена за литр"},
+  {k:"files",   n:"Фото / PDF документов"},
+  {k:"note",    n:"Комментарий"},
+];
+
+let isFreshSeed=false;
+let state=load();
+let currentView="dashboard";
+
+function load(){
+  try{const r=localStorage.getItem(STORE_KEY);if(r)return ensure(JSON.parse(r));}catch(e){}
+  isFreshSeed=true;                       // на этом устройстве данных не было — создан демо-набор
+  return seed();
+}
+function ensure(s){
+  if(!s.car)s.car=seed().car;
+  if(!s.tags||!s.tags.length)s.tags=seed().tags;
+  if(!s.expenses)s.expenses=[];
+  s.tags.forEach(t=>{if(!t.fields)t.fields={};ALL_FIELDS.forEach(f=>{if(typeof t.fields[f.k]!=="boolean")t.fields[f.k]=false;});});
+  return s;
+}
+function save(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){toast("⚠️ Не удалось сохранить: хранилище переполнено");}
+  if(!applyingRemote) scheduleSyncPush();
+}
+
+/* ======================= СИНХРОНИЗАЦИЯ (Supabase) ======================= */
+const SB_URL="https://wjmbelqzjmpryqpmcwki.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqbWJlbHF6am1wcnlxcG1jd2tpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNTgwNjYsImV4cCI6MjEwMDYzNDA2Nn0.67STCLpmOR64IBTgbw945JqPivEEyBXIqdIdn8qjT5A";
+const SB_SPACE="moy-avto-4c1f9a2e";       // общее пространство (тестовое)
+const TS_KEY="moy_avto_ts";
+let localTs=+(localStorage.getItem(TS_KEY)||0);
+let applyingRemote=false, pushTimer=null;
+
+function sbHeaders(extra){
+  return Object.assign({"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},extra||{});
+}
+function syncStatus(t){const el=document.getElementById("syncDot");if(el)el.textContent=t;}
+
+async function syncPull(){
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/moy_avto?space=eq.${encodeURIComponent(SB_SPACE)}&select=data,updated_at`,{headers:sbHeaders()});
+    if(!r.ok){syncStatus("⚠︎ офлайн");return;}
+    const rows=await r.json();
+    if(!rows.length){scheduleSyncPush(true);syncStatus("☁︎ синхрон");return;}   // в облаке пусто — зальём своё
+    const remoteTs=new Date(rows[0].updated_at).getTime();
+    // защита: первый синхрон устройства с реальными (не демо) данными — отправляем своё, не затираем
+    if(localTs===0 && !isFreshSeed){scheduleSyncPush(true);syncStatus("☁︎ синхрон");return;}
+    if(remoteTs>localTs){
+      applyingRemote=true;
+      state=ensure(rows[0].data);
+      localTs=remoteTs;
+      localStorage.setItem(STORE_KEY,JSON.stringify(state));
+      localStorage.setItem(TS_KEY,String(localTs));
+      render();
+      applyingRemote=false;
+      toast("📥 Обновлено из облака");
+    }
+    syncStatus("☁︎ синхрон");
+  }catch(e){syncStatus("⚠︎ офлайн");}
+}
+
+async function syncPushNow(){
+  try{
+    const body=JSON.stringify([{space:SB_SPACE,data:state,updated_at:new Date(localTs).toISOString()}]);
+    const r=await fetch(`${SB_URL}/rest/v1/moy_avto`,{method:"POST",headers:sbHeaders({"Prefer":"resolution=merge-duplicates,return=minimal"}),body});
+    syncStatus(r.ok?"☁︎ синхрон":"⚠︎ ошибка");
+  }catch(e){syncStatus("⚠︎ офлайн");}
+}
+
+function scheduleSyncPush(immediate){
+  localTs=Date.now();
+  localStorage.setItem(TS_KEY,String(localTs));
+  clearTimeout(pushTimer);
+  pushTimer=setTimeout(syncPushNow,immediate?0:800);
+}
+
+function syncInit(){
+  syncPull();
+  setInterval(syncPull,15000);                       // подтягивать изменения с других устройств
+  window.addEventListener("focus",syncPull);
+}
+
+function mkTag(name,icon,color,mode,autoTitle,fields){
+  const f={items:false,place:false,odometer:false,liters:false,files:false,note:false};
+  (fields||[]).forEach(k=>f[k]=true);
+  return {id:uid(),name,icon,color,mode,autoTitle:autoTitle||name,fields:f};
+}
+function seed(){
+  const T=n=>dstr(addDays(today(),-n));
+  const tags=[
+    mkTag("Мойка","🧼","#56c2ff","simple","Мойка автомобиля",["note","files"]),
+    mkTag("АЗС","⛽","#f5b455","simple","Заправка",["liters","odometer","note","files"]),
+    mkTag("Парковка","🅿️","#8b5bff","simple","Парковка",["place","note"]),
+    mkTag("Штрафы","🚔","#ff6b6b","simple","Штраф ГИБДД",["note","files"]),
+    mkTag("Платная дорога","🛣️","#4ade80","simple","Платная дорога",["note"]),
+    mkTag("Страховка","🛡️","#9aa6b6","simple","Страховка ОСАГО",["note","files"]),
+    mkTag("Ремонт","🔧","#ff6b6b","complex","Ремонт",["items","place","odometer","files","note"]),
+    mkTag("ТО","🛠️","#2dd4a7","complex","Плановое ТО",["items","place","odometer","files","note"]),
+    mkTag("Шины","🛞","#5b8cff","complex","Шины",["items","place","odometer","files","note"]),
+    mkTag("Диагностика","🔍","#56c2ff","complex","Диагностика",["items","place","odometer","files","note"]),
+    mkTag("Запчасти","⚙️","#fb923c","complex","Запчасти",["items","place","odometer","files","note"]),
+    mkTag("Кузов","🎨","#ff8fb1","complex","Кузовные работы",["items","place","odometer","files","note"]),
+  ];
+  const t=k=>tags.find(x=>x.name===k).id;
+  return {
+    car:{name:"Мой автомобиль",model:"",plate:"",year:"",vin:"",photo:null,odometer:0},
+    tags,
+    expenses:[
+      {id:uid(),tagId:t("АЗС"),title:"Заправка",date:T(1),total:3400,items:[],place:"",odometer:97250,liters:52,note:"АИ-95",files:[]},
+      {id:uid(),tagId:t("Мойка"),title:"Мойка автомобиля",date:T(3),total:900,items:[],place:"",odometer:0,liters:0,note:"комплекс",files:[]},
+      {id:uid(),tagId:t("ТО"),title:"Плановое ТО",date:T(9),total:0,
+        items:[{kind:"part",name:"Масло моторное 5W-30, 5 л",qty:1,price:4900},
+               {kind:"part",name:"Фильтр масляный",qty:1,price:850},
+               {kind:"part",name:"Фильтр воздушный",qty:1,price:1100},
+               {kind:"work",name:"Замена масла и фильтров",qty:1,price:2500}],
+        place:"СТО «Автопрофи», ул. Ленина 42",odometer:96900,liters:0,note:"следующее ТО через 10 000 км",files:[]},
+      {id:uid(),tagId:t("АЗС"),title:"Заправка",date:T(12),total:3100,items:[],place:"",odometer:96750,liters:48,note:"",files:[]},
+      {id:uid(),tagId:t("Штрафы"),title:"Штраф ГИБДД",date:T(16),total:500,items:[],place:"",odometer:0,liters:0,note:"превышение 20 км/ч",files:[]},
+      {id:uid(),tagId:t("Шины"),title:"Шины",date:T(38),total:0,
+        items:[{kind:"part",name:"Шина летняя 205/55 R16",qty:4,price:6800},
+               {kind:"work",name:"Шиномонтаж и балансировка",qty:4,price:700}],
+        place:"Шинный центр «Колесо»",odometer:96500,liters:0,note:"сезонная смена",files:[]},
+      {id:uid(),tagId:t("АЗС"),title:"Заправка",date:T(45),total:2950,items:[],place:"",odometer:96200,liters:46,note:"",files:[]},
+    ]
+  };
+}
+
+/* ================================================================ ХЕЛПЕРЫ */
+function uid(){return Math.random().toString(36).slice(2,10);}
+function today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function dstr(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
+function parse(s){return new Date(s+"T00:00:00");}
+function fmtRu(d){return d.toLocaleDateString("ru-RU",{day:"numeric",month:"short"});}
+function fmtRuFull(s){const d=parse(s);const t=dstr(today());
+  if(s===t)return "Сегодня";
+  if(s===dstr(addDays(today(),-1)))return "Вчера";
+  return d.toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long"});}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function money(n){return Math.round(+n||0).toLocaleString("ru-RU");}
+function num(n){n=+n||0;return Number.isInteger(n)?n:Math.round(n*100)/100;}
+function km(n){return (+n||0).toLocaleString("ru-RU");}
+function tagById(id){return state.tags.find(t=>t.id===id)||{id:"",name:"Без тега",icon:"❓",color:"#6b7686",fields:{},mode:"simple"};}
+function expTotal(e){
+  if(e.items&&e.items.length)return e.items.reduce((a,i)=>a+(+i.qty||0)*(+i.price||0),0);
+  return +e.total||0;
+}
+function toast(msg){
+  const r=document.getElementById("toastRoot");
+  r.innerHTML=`<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toast._t);toast._t=setTimeout(()=>r.innerHTML="",2600);
+}
+function fileIcon(type){return type&&type.startsWith("image/")?"🖼️":"📄";}
+
+/* ================================================================ ПЕРИОДЫ */
+let dashScope="year";
+function buildPeriodSelect(){
+  const sel=document.getElementById("periodSel");
+  sel.innerHTML=`
+    <option value="month">Текущий месяц</option>
+    <option value="30">Последние 30 дней</option>
+    <option value="90">Последние 90 дней</option>
+    <option value="year">Текущий год</option>
+    <option value="12">Последние 12 месяцев</option>
+    <option value="all">За всё время</option>
+    <option value="custom">Произвольный период…</option>`;
+  sel.value=dashScope;
+  document.getElementById("customRange").classList.toggle("hidden",dashScope!=="custom");
+}
+function onPeriodChange(){
+  dashScope=document.getElementById("periodSel").value;
+  const cr=document.getElementById("customRange");
+  cr.classList.toggle("hidden",dashScope!=="custom");
+  if(dashScope==="custom"){
+    const f=document.getElementById("cFrom"),t=document.getElementById("cTo");
+    if(!f.value)f.value=dstr(addDays(today(),-30));
+    if(!t.value)t.value=dstr(today());
+  }
+  renderDashboard();
+}
+function scopeRange(v){
+  const now=today();
+  if(v==="all")return{from:null,to:null,label:"за всё время"};
+  if(v==="month")return{from:new Date(now.getFullYear(),now.getMonth(),1),to:now,label:"за текущий месяц"};
+  if(v==="year")return{from:new Date(now.getFullYear(),0,1),to:now,label:"за "+now.getFullYear()+" год"};
+  if(v==="12")return{from:addDays(now,-364),to:now,label:"за 12 месяцев"};
+  if(v==="custom"){
+    const f=document.getElementById("cFrom"),t=document.getElementById("cTo");
+    return{from:f&&f.value?parse(f.value):null,to:t&&t.value?parse(t.value):null,label:"за выбранный период"};
+  }
+  const n=+v;return{from:addDays(now,-(n-1)),to:now,label:`за ${n} дн.`};
+}
+function inRange(e,r){
+  const d=parse(e.date);
+  if(r.from&&d<r.from)return false;
+  if(r.to&&d>r.to)return false;
+  return true;
+}
+function scoped(r){return state.expenses.filter(e=>inRange(e,r)).sort((a,b)=>b.date.localeCompare(a.date)||0);}
+
+/* ================================================================ КАРТОЧКА АВТО */
+function renderCarCard(){
+  const c=state.car;
+  const all=state.expenses;
+  const total=all.reduce((a,e)=>a+expTotal(e),0);
+  const odos=all.filter(e=>+e.odometer>0).map(e=>+e.odometer);
+  const curOdo=Math.max(+c.odometer||0,odos.length?Math.max(...odos):0);
+  const minOdo=odos.length?Math.min(...odos):0;
+  const span=curOdo&&minOdo&&curOdo>minOdo?curOdo-minOdo:0;
+  const perKm=span?total/span:0;
+  const photoHTML=c.photo
+    ? `<img id="carPhotoImg" alt="">`
+    : `<span>🚗</span>`;
+  document.getElementById("carCard").innerHTML=`
+    <div class="car-card">
+      <div class="car-photo" onclick="openCarModal()" title="Фото автомобиля">${photoHTML}</div>
+      <div class="car-info">
+        <h2>${esc(c.name||"Мой автомобиль")}
+          ${c.plate?`<span class="plate">${esc(c.plate)}</span>`:""}
+        </h2>
+        <div class="car-meta">
+          ${c.model?`<div class="m">Модель<b>${esc(c.model)}${c.year?", "+esc(c.year):""}</b></div>`:""}
+          <div class="m">Пробег<b>${curOdo?km(curOdo)+" км":"—"}</b></div>
+          <div class="m">Всего потрачено<b class="acc">${money(total)} ₽</b></div>
+          ${perKm?`<div class="m">Стоимость км<b>${(Math.round(perKm*100)/100).toLocaleString("ru-RU")} ₽</b></div>`:""}
+          <div class="m">Записей<b>${all.length}</b></div>
+        </div>
+      </div>
+      <div class="car-edit"><button class="btn ghost sm" onclick="openCarModal()">✏️ Изменить</button></div>
+    </div>`;
+  if(c.photo)fileURL(c.photo).then(u=>{const i=document.getElementById("carPhotoImg");if(i&&u)i.src=u;});
+}
+
+/* ================================================================ РЕНДЕР */
+function showView(v){
+  currentView=v;
+  ["dashboard","history","settings"].forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!==v));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));
+  render();
+}
+function render(){
+  renderCarCard();
+  if(currentView==="dashboard"){buildPeriodSelect();renderDashboard();}
+  if(currentView==="history"){buildHistFilters();renderHistory();}
+  if(currentView==="settings")renderSettings();
+  const t=state.expenses.reduce((a,e)=>a+expTotal(e),0);
+  document.getElementById("footStats").textContent=`${state.expenses.length} расходов · ${money(t)} ₽`;
+}
+
+/* ---------------- ДАШБОРД ---------------- */
+function renderDashboard(){
+  const r=scopeRange(dashScope);
+  const list=scoped(r);
+  const total=list.reduce((a,e)=>a+expTotal(e),0);
+  const avg=list.length?total/list.length:0;
+  document.getElementById("dashSub").textContent="Обзор расходов "+r.label;
+  document.getElementById("tagScope").textContent=r.label;
+
+  // пробег за период и стоимость километра
+  const odos=list.filter(e=>+e.odometer>0).map(e=>+e.odometer);
+  const span=odos.length>1?Math.max(...odos)-Math.min(...odos):0;
+  const perKm=span?total/span:0;
+
+  // самый дорогой тег
+  const byTag=tagTotals(list);
+  const top=byTag[0];
+
+  document.getElementById("statGrid").innerHTML=`
+    <div class="stat"><div class="corner">💸</div><div class="lbl">Всего потрачено</div>
+      <div class="val">${money(total)} <small>₽</small></div><div class="sub">${list.length} записей ${r.label}</div></div>
+    <div class="stat"><div class="corner">🧾</div><div class="lbl">Средний чек</div>
+      <div class="val">${money(avg)} <small>₽</small></div><div class="sub">на одну запись</div></div>
+    <div class="stat"><div class="corner">🛣️</div><div class="lbl">Стоимость км</div>
+      <div class="val">${perKm?(Math.round(perKm*100)/100).toLocaleString("ru-RU"):"—"} <small>${perKm?"₽/км":""}</small></div>
+      <div class="sub">${span?"пробег "+km(span)+" км за период":"нужен пробег в 2+ записях"}</div></div>
+    <div class="stat"><div class="corner">${top?top.tag.icon:"🏷️"}</div><div class="lbl">Больше всего</div>
+      <div class="val" style="font-size:23px;">${top?esc(top.tag.name):"—"}</div>
+      <div class="sub">${top?money(top.sum)+" ₽ · "+Math.round(top.sum/total*100)+"%":"нет расходов"}</div></div>`;
+
+  renderTagBreakdown(byTag,total);
+  renderMonthBars(r);
+  renderFuel(list);
+
+  const recent=list.slice(0,5);
+  document.getElementById("dashRecent").innerHTML=recent.length
+    ? recent.map(e=>expCard(e)).join("")
+    : `<div class="card empty"><div class="ico">🧾</div><p>Расходов ${r.label} пока нет</p></div>`;
+  hydrateThumbs();
+}
+function tagTotals(list){
+  const m=new Map();
+  list.forEach(e=>{const s=m.get(e.tagId)||0;m.set(e.tagId,s+expTotal(e));});
+  return [...m.entries()].map(([id,sum])=>({tag:tagById(id),sum,n:list.filter(e=>e.tagId===id).length}))
+    .sort((a,b)=>b.sum-a.sum);
+}
+function renderTagBreakdown(byTag,total){
+  const box=document.getElementById("tagBreakdown");
+  if(!byTag.length){box.innerHTML=`<div class="empty" style="padding:26px;"><div class="ico">🏷️</div><p>Нет расходов за этот период</p></div>`;return;}
+  const max=byTag[0].sum||1;
+  box.innerHTML=byTag.map(t=>`
+    <div class="tb-row" onclick="jumpToTag('${t.tag.id}')" title="Показать в ленте расходов">
+      <div class="tb-name"><span class="dot" style="background:${t.tag.color}"></span>${t.tag.icon} ${esc(t.tag.name)}</div>
+      <div class="tb-bar"><i style="width:${t.sum/max*100}%;background:linear-gradient(90deg,${t.tag.color},color-mix(in srgb,${t.tag.color} 55%,#8b5bff))"></i></div>
+      <div class="tb-val">${money(t.sum)} ₽<span class="pc">${total?Math.round(t.sum/total*100):0}% · ${t.n}</span></div>
+    </div>`).join("");
+}
+function renderMonthBars(r){
+  // последние 6 месяцев внутри выбранного периода (или последние 6 месяцев вообще)
+  const now=today();
+  const months=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({y:d.getFullYear(),m:d.getMonth(),sum:0});
+  }
+  state.expenses.forEach(e=>{
+    if(!inRange(e,r))return;
+    const d=parse(e.date);
+    const b=months.find(x=>x.y===d.getFullYear()&&x.m===d.getMonth());
+    if(b)b.sum+=expTotal(e);
+  });
+  const max=Math.max(...months.map(m=>m.sum),1);
+  document.getElementById("monthBars").innerHTML=months.map(m=>`
+    <div class="col" title="${MONTHS[m.m]} ${m.y}: ${money(m.sum)} ₽">
+      <div class="cv">${m.sum?money(m.sum):""}</div>
+      <div class="stack"><i style="height:${m.sum/max*100}%"></i></div>
+      <div class="cl">${MONTHS[m.m]}</div>
+    </div>`).join("");
+}
+function renderFuel(list){
+  const fuel=list.filter(e=>{const t=tagById(e.tagId);return t.fields&&t.fields.liters&&+e.liters>0;});
+  const box=document.getElementById("fuelCard");
+  if(!fuel.length){
+    box.innerHTML=`<div class="section-title" style="margin:0 0 10px;">Топливо</div>
+      <div class="empty" style="padding:32px 10px;"><div class="ico">⛽</div>
+      <p>Добавьте заправку с литрами и пробегом —<br>посчитаю средний расход и цену литра</p></div>`;
+    return;
+  }
+  const liters=fuel.reduce((a,e)=>a+(+e.liters||0),0);
+  const cost=fuel.reduce((a,e)=>a+expTotal(e),0);
+  const perL=liters?cost/liters:0;
+  // расход: по разнице пробега между первой и последней заправкой с одометром
+  const withOdo=fuel.filter(e=>+e.odometer>0).sort((a,b)=>a.date.localeCompare(b.date));
+  let per100=0,dist=0;
+  if(withOdo.length>1){
+    dist=(+withOdo[withOdo.length-1].odometer)-(+withOdo[0].odometer);
+    // литры всех заправок, кроме первой (первая — точка отсчёта бака)
+    const l=withOdo.slice(1).reduce((a,e)=>a+(+e.liters||0),0);
+    if(dist>0&&l>0)per100=l/dist*100;
+  }
+  box.innerHTML=`
+    <div class="section-title" style="margin:0 0 12px;">Топливо <span class="count">${fuel.length} заправок</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="stat" style="box-shadow:none;background:var(--bg-soft);padding:14px 16px;">
+        <div class="lbl">Средний расход</div>
+        <div class="val" style="font-size:25px;">${per100?num(per100).toLocaleString("ru-RU"):"—"} <small>${per100?"л/100км":""}</small></div>
+        <div class="sub">${dist>0?"на "+km(dist)+" км пробега":"нужен пробег в 2+ заправках"}</div>
+      </div>
+      <div class="stat" style="box-shadow:none;background:var(--bg-soft);padding:14px 16px;">
+        <div class="lbl">Цена литра</div>
+        <div class="val" style="font-size:25px;">${perL?num(perL).toLocaleString("ru-RU"):"—"} <small>₽/л</small></div>
+        <div class="sub">средняя за период</div>
+      </div>
+      <div class="stat" style="box-shadow:none;background:var(--bg-soft);padding:14px 16px;">
+        <div class="lbl">Залито</div>
+        <div class="val" style="font-size:25px;">${num(liters).toLocaleString("ru-RU")} <small>л</small></div>
+        <div class="sub">за период</div>
+      </div>
+      <div class="stat" style="box-shadow:none;background:var(--bg-soft);padding:14px 16px;">
+        <div class="lbl">Потрачено на топливо</div>
+        <div class="val" style="font-size:25px;">${money(cost)} <small>₽</small></div>
+        <div class="sub">${per100&&dist?money(cost/dist*100)+" ₽ на 100 км":"за период"}</div>
+      </div>
+    </div>`;
+}
+function jumpToTag(tagId){
+  showView("history");
+  const s=document.getElementById("histTag");
+  if(s){s.value=tagId;renderHistory();}
+}
+
+/* ---------------- ЛЕНТА РАСХОДОВ ---------------- */
+function buildHistFilters(){
+  const s=document.getElementById("histTag"),cur=s.value;
+  s.innerHTML=`<option value="">Все теги</option>`+state.tags.map(t=>`<option value="${t.id}">${t.icon} ${esc(t.name)}</option>`).join("");
+  if(cur)s.value=cur;
+}
+function renderHistory(){
+  const q=(document.getElementById("histQ").value||"").trim().toLowerCase();
+  const tg=document.getElementById("histTag").value;
+  const r=scopeRange(document.getElementById("histPeriod").value);
+  let list=scoped(r);
+  if(tg)list=list.filter(e=>e.tagId===tg);
+  if(q)list=list.filter(e=>{
+    const hay=[e.title,e.note,e.place,tagById(e.tagId).name,...(e.items||[]).map(i=>i.name)].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+  const total=list.reduce((a,e)=>a+expTotal(e),0);
+  document.getElementById("histTotal").textContent=list.length?`${list.length} записей · ${money(total)} ₽`:"";
+  document.getElementById("histSub").textContent=`Лента всех трат по датам`;
+
+  const box=document.getElementById("histList");
+  if(!list.length){
+    box.innerHTML=`<div class="card empty"><div class="ico">🔍</div><p>Ничего не найдено. Измените фильтры или добавьте расход.</p></div>`;
+    return;
+  }
+  // группировка по датам
+  const groups=[];
+  list.forEach(e=>{
+    let g=groups.find(x=>x.date===e.date);
+    if(!g){g={date:e.date,items:[]};groups.push(g);}
+    g.items.push(e);
+  });
+  box.innerHTML=groups.map(g=>{
+    const s=g.items.reduce((a,e)=>a+expTotal(e),0);
+    return `<div class="hist-date">${esc(fmtRuFull(g.date))} <span class="hs">· ${money(s)} ₽</span></div>`
+      +g.items.map(e=>expCard(e)).join("");
+  }).join("");
+  hydrateThumbs();
+}
+function expCard(e){
+  const t=tagById(e.tagId);
+  const total=expTotal(e);
+  const chips=[];
+  if(e.place)chips.push(`<span class="chip">📍 ${esc(e.place)}</span>`);
+  if(+e.odometer>0)chips.push(`<span class="chip">🛣️ <b>${km(e.odometer)}</b> км</span>`);
+  if(+e.liters>0)chips.push(`<span class="chip">⛽ <b>${num(e.liters)}</b> л${total?` · ${num(total/e.liters)} ₽/л`:""}</span>`);
+  if(e.items&&e.items.length)chips.push(`<span class="chip">🧰 <b>${e.items.length}</b> позиц.</span>`);
+  const itemsHTML=(e.items&&e.items.length)?`<div class="eitems">${e.items.map(i=>`
+      <div class="li"><span class="n">${i.kind==="work"?"🔧":"⚙️"} ${esc(i.name)}${(+i.qty||1)>1?` × ${num(i.qty)}`:""}</span>
+      <span class="p">${money((+i.qty||0)*(+i.price||0))} ₽</span></div>`).join("")}</div>`:"";
+  const filesHTML=(e.files&&e.files.length)?`<div class="thumbs">${e.files.map((f,i)=>`
+      <div class="thumb" data-fid="${f.id}" data-exp="${e.id}" data-idx="${i}" onclick="event.stopPropagation();openLightbox('${e.id}',${i})" title="${esc(f.name)}">
+        <span>${fileIcon(f.type)}</span></div>`).join("")}</div>`:"";
+  return `
+    <div class="exp" style="--tg:${t.color}" onclick="openExpenseModal('${e.id}')">
+      <div class="eico">${t.icon}</div>
+      <div class="ebody">
+        <div class="etitle">${esc(e.title||t.name)} <span class="tag" style="--tg:${t.color}">${t.icon} ${esc(t.name)}</span></div>
+        ${chips.length?`<div class="emeta">${chips.join("")}</div>`:""}
+        ${itemsHTML}
+        ${e.note?`<div class="enote">💬 ${esc(e.note)}</div>`:""}
+        ${filesHTML}
+      </div>
+      <div class="esum">
+        <div class="amt">${money(total)} ₽</div>
+        <div class="acts">
+          <button class="icon-btn" onclick="event.stopPropagation();openExpenseModal('${e.id}')" title="Изменить">✏️</button>
+          <button class="icon-btn" onclick="event.stopPropagation();delExpense('${e.id}')" title="Удалить">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+}
+function hydrateThumbs(){
+  document.querySelectorAll(".thumb[data-fid]").forEach(async el=>{
+    const e=state.expenses.find(x=>x.id===el.dataset.exp);
+    if(!e)return;
+    const f=e.files[+el.dataset.idx];
+    if(!f||!f.type.startsWith("image/"))return;
+    const u=await fileURL(f.id);
+    if(u)el.innerHTML=`<img src="${u}" alt="">`;
+  });
+}
+function delExpense(id){
+  const e=state.expenses.find(x=>x.id===id);
+  if(!e)return;
+  if(!confirm(`Удалить расход «${e.title}» на ${money(expTotal(e))} ₽?`))return;
+  (e.files||[]).forEach(f=>fileDel(f.id));
+  state.expenses=state.expenses.filter(x=>x.id!==id);
+  save();render();toast("🗑️ Расход удалён");
+}
+
+/* ================================================================ МОДАЛКА РАСХОДА */
+let draft=null, draftEditing=false;
+function closeModal(){document.getElementById("modalRoot").innerHTML="";draft=null;}
+
+function openExpenseModal(id){
+  if(id){
+    const e=state.expenses.find(x=>x.id===id);
+    if(!e)return;
+    draft=JSON.parse(JSON.stringify(e));
+    draftEditing=true;
+    renderExpenseModal();
+  }else{
+    draft={id:uid(),tagId:null,title:"",date:dstr(today()),total:"",items:[],place:"",odometer:"",liters:"",note:"",files:[]};
+    draftEditing=false;
+    renderTagPicker();
+  }
+}
+/* Шаг 1 — выбор тега */
+function renderTagPicker(){
+  const simple=state.tags.filter(t=>t.mode==="simple");
+  const complex=state.tags.filter(t=>t.mode==="complex");
+  const grp=(label,hint,arr)=>arr.length?`
+    <div class="tag-pick-group">
+      <div class="tp-label">${label} <span style="color:var(--txt-faint);font-weight:600;text-transform:none;letter-spacing:0;">· ${hint}</span></div>
+      <div class="tag-pick">
+        ${arr.map(t=>`<button style="--tg:${t.color}" onclick="pickTag('${t.id}')">
+          <span class="ti">${t.icon}</span>${esc(t.name)}</button>`).join("")}
+      </div>
+    </div>`:"";
+  document.getElementById("modalRoot").innerHTML=`
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-head"><h3>Новый расход</h3><p>Выберите тег — форма подстроится под него</p></div>
+        <div class="modal-body">
+          ${grp("Простые","заполните только цену и комментарий",simple)}
+          ${grp("Сложные","акт: детали, работы, место, пробег, документы",complex)}
+        </div>
+        <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Отмена</button></div>
+      </div>
+    </div>`;
+}
+function pickTag(id){
+  const t=tagById(id);
+  draft.tagId=id;
+  draft.title=t.autoTitle||t.name;   // простые теги: наименование подставляется автоматически
+  renderExpenseModal();
+}
+/* Шаг 2 — форма под тег */
+function syncDraft(){
+  const q=i=>document.getElementById(i);
+  if(q("f-title"))draft.title=q("f-title").value;
+  if(q("f-date"))draft.date=q("f-date").value;
+  if(q("f-total"))draft.total=q("f-total").value;
+  if(q("f-place"))draft.place=q("f-place").value;
+  if(q("f-odo"))draft.odometer=q("f-odo").value;
+  if(q("f-liters"))draft.liters=q("f-liters").value;
+  if(q("f-note"))draft.note=q("f-note").value;
+  (draft.items||[]).forEach((it,i)=>{
+    if(q("i-kind-"+i))it.kind=q("i-kind-"+i).value;
+    if(q("i-name-"+i))it.name=q("i-name-"+i).value;
+    if(q("i-qty-"+i))it.qty=q("i-qty-"+i).value;
+    if(q("i-price-"+i))it.price=q("i-price-"+i).value;
+  });
+}
+function renderExpenseModal(){
+  const t=tagById(draft.tagId);
+  const F=t.fields||{};
+  const useItems=!!F.items;
+  const itemsTotal=(draft.items||[]).reduce((a,i)=>a+(+i.qty||0)*(+i.price||0),0);
+
+  const itemsHTML=useItems?`
+    <div class="field">
+      <label>Детали и работы <span style="color:var(--txt-faint);font-weight:500;">— как в акте автосервиса</span></label>
+      <div class="items-box">
+        ${draft.items.length?`<div class="items-head"><span>Тип</span><span>Наименование</span><span>Кол-во</span><span>Цена, ₽</span><span></span></div>`:""}
+        ${draft.items.map((it,i)=>`
+          <div class="item-row">
+            <select id="i-kind-${i}" onchange="syncDraft();renderExpenseModal()">
+              <option value="part" ${it.kind!=="work"?"selected":""}>⚙️ Деталь</option>
+              <option value="work" ${it.kind==="work"?"selected":""}>🔧 Работа</option>
+            </select>
+            <input id="i-name-${i}" value="${esc(it.name)}" placeholder="${it.kind==="work"?"Например: замена масла":"Например: масляный фильтр"}" oninput="syncDraft()">
+            <input id="i-qty-${i}" class="num" type="number" step="any" min="0" value="${esc(it.qty)}" oninput="syncDraft();recalcItems()">
+            <input id="i-price-${i}" class="num" type="number" step="any" min="0" value="${esc(it.price)}" oninput="syncDraft();recalcItems()">
+            <button class="item-del" onclick="syncDraft();delItem(${i})" title="Убрать">✕</button>
+          </div>`).join("")}
+        <div class="items-add">
+          <button onclick="syncDraft();addItem('part')">＋ Деталь</button>
+          <button onclick="syncDraft();addItem('work')">＋ Работа</button>
+        </div>
+        <div class="items-total">
+          <span class="tl">Итого по акту</span>
+          <span class="tv" id="itemsTotal">${money(itemsTotal)} ₽<small id="itemsCount">${draft.items.length} позиций</small></span>
+        </div>
+      </div>
+    </div>`:"";
+
+  const amountHTML=!useItems?`
+    <div class="field big-amount">
+      <label>Сумма, ₽</label>
+      <input id="f-total" type="number" step="any" min="0" value="${esc(draft.total)}" placeholder="0" oninput="syncDraft();recalcLiters()" autofocus>
+      ${F.liters?`<div class="hint" id="literHint"></div>`:""}
+    </div>`:"";
+
+  const litersHTML=F.liters?`
+    <div class="field"><label>Литры</label>
+      <input id="f-liters" type="number" step="any" min="0" value="${esc(draft.liters)}" placeholder="напр. 45" oninput="syncDraft();recalcLiters()">
+    </div>`:"";
+  const odoHTML=F.odometer?`
+    <div class="field"><label>Пробег, км</label>
+      <input id="f-odo" type="number" step="1" min="0" value="${esc(draft.odometer)}" placeholder="напр. ${state.car.odometer||98000}" oninput="syncDraft()">
+    </div>`:"";
+  const placeHTML=F.place?`
+    <div class="field"><label>${t.mode==="complex"?"Место ремонта":"Место"}</label>
+      <input id="f-place" value="${esc(draft.place)}" placeholder="${t.mode==="complex"?"СТО, адрес":"Например: ТЦ Галерея"}" oninput="syncDraft()">
+    </div>`:"";
+  const noteHTML=F.note?`
+    <div class="field"><label>Комментарий</label>
+      <textarea id="f-note" rows="2" placeholder="Любые заметки по этому расходу" oninput="syncDraft()">${esc(draft.note)}</textarea>
+    </div>`:"";
+  const filesHTML=F.files?`
+    <div class="field">
+      <label>Документы <span style="color:var(--txt-faint);font-weight:500;">— фото чека, счёт, акт (JPG, PNG, PDF)</span></label>
+      <div class="thumbs" id="draftFiles" style="margin:0 0 10px;"></div>
+      <div class="drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="di">📎</div>
+        <div class="dt">Перетащите файлы сюда или нажмите, чтобы выбрать</div>
+        <div class="dh">Фото и PDF откроются на весь экран по клику</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden" multiple accept="image/*,application/pdf" onchange="addFiles(this.files)">
+    </div>`:"";
+
+  const rowSmall=[litersHTML,odoHTML].filter(Boolean);
+  const smallRow=rowSmall.length?`<div class="${rowSmall.length===2?"row2":""}">${rowSmall.join("")}</div>`:"";
+
+  document.getElementById("modalRoot").innerHTML=`
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal ${useItems?"wide":""}">
+        <div class="modal-head">
+          <h3 style="display:flex;align-items:center;gap:10px;">
+            <span class="tag lg" style="--tg:${t.color}">${t.icon} ${esc(t.name)}</span>
+            ${draftEditing?"Изменить расход":"Новый расход"}
+          </h3>
+          <p>${useItems?"Добавьте детали и работы — сумма посчитается сама":"Впишите сумму и комментарий — остальное уже заполнено"}</p>
+        </div>
+        <div class="modal-body">
+          <div class="row2">
+            <div class="field"><label>Наименование</label>
+              <input id="f-title" value="${esc(draft.title)}" placeholder="${esc(t.autoTitle||t.name)}" oninput="syncDraft()"></div>
+            <div class="field"><label>Дата</label>
+              <input id="f-date" type="date" value="${esc(draft.date)}" oninput="syncDraft()"></div>
+          </div>
+          ${amountHTML}
+          ${itemsHTML}
+          ${smallRow}
+          ${placeHTML}
+          ${noteHTML}
+          ${filesHTML}
+          ${!draftEditing?`<button class="btn ghost sm" style="align-self:flex-start;" onclick="renderTagPicker()">‹ Выбрать другой тег</button>`:""}
+        </div>
+        <div class="modal-foot">
+          ${draftEditing?`<button class="link-danger" onclick="closeModal();delExpense('${draft.id}')">Удалить</button>`:""}
+          <button class="btn ghost" onclick="closeModal()">Отмена</button>
+          <button class="btn" onclick="saveExpense()">${draftEditing?"Сохранить":"Добавить расход"}</button>
+        </div>
+      </div>
+    </div>`;
+  renderDraftFiles();
+  recalcLiters();
+  if(F.files)setupDrop();
+  const focus=document.getElementById(useItems?"f-title":"f-total");
+  if(focus&&!draftEditing)setTimeout(()=>focus.focus(),50);
+}
+function recalcItems(){
+  const tot=(draft.items||[]).reduce((a,i)=>a+(+i.qty||0)*(+i.price||0),0);
+  const el=document.getElementById("itemsTotal");
+  if(el)el.innerHTML=`${money(tot)} ₽<small id="itemsCount">${draft.items.length} позиций</small>`;
+}
+function recalcLiters(){
+  const h=document.getElementById("literHint");
+  if(!h)return;
+  const l=+draft.liters||0,t=+draft.total||0;
+  h.textContent=(l&&t)?`≈ ${num(t/l)} ₽ за литр`:"";
+}
+function addItem(kind){
+  syncDraft();   // не теряем уже введённые позиции при перерисовке
+  draft.items.push({kind,name:"",qty:1,price:""});
+  renderExpenseModal();
+  setTimeout(()=>{const el=document.getElementById("i-name-"+(draft.items.length-1));if(el)el.focus();},40);
+}
+function delItem(i){syncDraft();draft.items.splice(i,1);renderExpenseModal();}
+
+async function addFiles(files){
+  for(const f of files){
+    if(f.size>25*1024*1024){toast("⚠️ Файл больше 25 МБ: "+f.name);continue;}
+    const meta=await fileSave(f);
+    draft.files.push(meta);
+  }
+  renderDraftFiles();
+  toast("📎 Файлов прикреплено: "+draft.files.length);
+}
+function renderDraftFiles(){
+  const box=document.getElementById("draftFiles");
+  if(!box)return;
+  if(!draft.files.length){box.innerHTML="";return;}
+  box.innerHTML=draft.files.map((f,i)=>`
+    <div class="thumb" id="dthumb-${i}" title="${esc(f.name)}" onclick="openDraftFile(${i})">
+      <span>${fileIcon(f.type)}</span>
+      <span class="x" onclick="event.stopPropagation();removeDraftFile(${i})">✕</span>
+    </div>`).join("");
+  draft.files.forEach(async(f,i)=>{
+    if(!f.type.startsWith("image/"))return;
+    const u=await fileURL(f.id);
+    const el=document.getElementById("dthumb-"+i);
+    if(el&&u)el.insertAdjacentHTML("afterbegin",`<img src="${u}" alt="">`);
+  });
+}
+function removeDraftFile(i){
+  const f=draft.files[i];
+  fileDel(f.id);
+  draft.files.splice(i,1);
+  renderDraftFiles();
+}
+function openDraftFile(i){openLightboxFiles(draft.files,i);}
+function setupDrop(){
+  const z=document.getElementById("dropZone");
+  if(!z)return;
+  ["dragenter","dragover"].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.remove("over");}));
+  z.addEventListener("drop",e=>{if(e.dataTransfer.files.length)addFiles(e.dataTransfer.files);});
+}
+function saveExpense(){
+  syncDraft();
+  if(!draft.tagId){toast("Выберите тег");return;}
+  const t=tagById(draft.tagId);
+  if(!draft.title.trim())draft.title=t.autoTitle||t.name;
+  const total=expTotal(draft);
+  if(!total){
+    if(!confirm("Сумма не указана. Всё равно сохранить?"))return;
+  }
+  draft.total=+draft.total||0;
+  draft.odometer=+draft.odometer||0;
+  draft.liters=+draft.liters||0;
+  draft.items=(draft.items||[]).filter(i=>i.name.trim()||+i.price>0)
+    .map(i=>({kind:i.kind,name:i.name.trim(),qty:+i.qty||1,price:+i.price||0}));
+  const idx=state.expenses.findIndex(e=>e.id===draft.id);
+  if(idx>=0)state.expenses[idx]=draft; else state.expenses.push(draft);
+  // подтягиваем пробег авто, если он больше текущего
+  if(draft.odometer>(+state.car.odometer||0))state.car.odometer=draft.odometer;
+  save();closeModal();render();
+  toast(idx>=0?"✅ Расход обновлён":"✅ Расход добавлен: "+money(total)+" ₽");
+}
+
+/* ================================================================ ПРОСМОТР ФАЙЛОВ НА ВЕСЬ ЭКРАН */
+let lbFiles=[],lbIdx=0;
+function openLightbox(expId,idx){
+  const e=state.expenses.find(x=>x.id===expId);
+  if(!e)return;
+  openLightboxFiles(e.files,idx);
+}
+async function openLightboxFiles(files,idx){
+  lbFiles=files;lbIdx=idx;
+  await renderLightbox();
+  document.addEventListener("keydown",lbKeys);
+}
+function closeLightbox(){
+  document.getElementById("lbRoot").innerHTML="";
+  document.removeEventListener("keydown",lbKeys);
+}
+function lbKeys(e){
+  if(e.key==="Escape")closeLightbox();
+  if(e.key==="ArrowRight")lbNav(1);
+  if(e.key==="ArrowLeft")lbNav(-1);
+}
+function lbNav(d){
+  if(lbFiles.length<2)return;
+  lbIdx=(lbIdx+d+lbFiles.length)%lbFiles.length;
+  renderLightbox();
+}
+async function renderLightbox(){
+  const f=lbFiles[lbIdx];
+  if(!f)return;
+  const u=await fileURL(f.id);
+  const isImg=f.type.startsWith("image/");
+  const body=isImg
+    ? `<img src="${u}" alt="${esc(f.name)}">`
+    : `<iframe src="${u}#toolbar=1&view=FitH" title="${esc(f.name)}"></iframe>`;
+  document.getElementById("lbRoot").innerHTML=`
+    <div class="lb" onclick="if(event.target===this)closeLightbox()">
+      <div class="lb-bar">
+        <span style="font-size:19px;">${fileIcon(f.type)}</span>
+        <span class="nm">${esc(f.name)}</span>
+        <span class="ct">${lbFiles.length>1?`${lbIdx+1} / ${lbFiles.length} · `:""}${(f.size/1024/1024).toFixed(2)} МБ</span>
+        <button class="lb-x" onclick="closeLightbox()" title="Закрыть (Esc)">✕</button>
+      </div>
+      <div class="lb-body" style="position:relative;">
+        ${lbFiles.length>1?`<button class="lb-nav prev" onclick="event.stopPropagation();lbNav(-1)">‹</button>`:""}
+        ${body}
+        ${lbFiles.length>1?`<button class="lb-nav next" onclick="event.stopPropagation();lbNav(1)">›</button>`:""}
+      </div>
+    </div>`;
+}
+
+/* ================================================================ КАРТОЧКА АВТО — РЕДАКТОР */
+let carDraft=null;
+function openCarModal(){
+  carDraft=JSON.parse(JSON.stringify(state.car));
+  renderCarModal();
+}
+function syncCar(){
+  const q=i=>document.getElementById(i);
+  ["name","model","plate","year","vin"].forEach(k=>{if(q("c-"+k))carDraft[k]=q("c-"+k).value;});
+  if(q("c-odo"))carDraft.odometer=q("c-odo").value;
+}
+function renderCarModal(){
+  document.getElementById("modalRoot").innerHTML=`
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-head"><h3>Карточка автомобиля</h3><p>Отображается в шапке приложения</p></div>
+        <div class="modal-body">
+          <div class="field">
+            <label>Фото автомобиля</label>
+            <div style="display:flex;gap:14px;align-items:center;">
+              <div class="car-photo" id="carDraftPhoto" style="width:110px;height:78px;" onclick="document.getElementById('carPhotoInput').click()">
+                ${carDraft.photo?"":"<span>🚗</span>"}
+              </div>
+              <div style="flex:1;">
+                <button class="btn ghost sm" onclick="document.getElementById('carPhotoInput').click()">📷 Выбрать фото</button>
+                ${carDraft.photo?`<button class="btn ghost sm" style="margin-left:8px;" onclick="clearCarPhoto()">Убрать</button>`:""}
+                <div class="hint" style="margin-top:7px;">JPG или PNG</div>
+              </div>
+            </div>
+            <input type="file" id="carPhotoInput" class="hidden" accept="image/*" onchange="setCarPhoto(this.files[0])">
+          </div>
+          <div class="field"><label>Название</label>
+            <input id="c-name" value="${esc(carDraft.name)}" placeholder="Например: Мой Camry" oninput="syncCar()"></div>
+          <div class="row2">
+            <div class="field"><label>Марка и модель</label>
+              <input id="c-model" value="${esc(carDraft.model)}" placeholder="Toyota Camry 2.5" oninput="syncCar()"></div>
+            <div class="field"><label>Год выпуска</label>
+              <input id="c-year" value="${esc(carDraft.year)}" placeholder="2019" oninput="syncCar()"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Госномер</label>
+              <input id="c-plate" value="${esc(carDraft.plate)}" placeholder="А123ВС 777" oninput="syncCar()"></div>
+            <div class="field"><label>Текущий пробег, км</label>
+              <input id="c-odo" type="number" min="0" value="${esc(carDraft.odometer||"")}" placeholder="98000" oninput="syncCar()"></div>
+          </div>
+          <div class="field"><label>VIN</label>
+            <input id="c-vin" value="${esc(carDraft.vin)}" placeholder="необязательно" oninput="syncCar()"></div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn ghost" onclick="closeModal()">Отмена</button>
+          <button class="btn" onclick="saveCar()">Сохранить</button>
+        </div>
+      </div>
+    </div>`;
+  if(carDraft.photo)fileURL(carDraft.photo).then(u=>{
+    const el=document.getElementById("carDraftPhoto");
+    if(el&&u)el.innerHTML=`<img src="${u}" alt="">`;
+  });
+}
+async function setCarPhoto(f){
+  if(!f)return;
+  if(carDraft.photo)fileDel(carDraft.photo);
+  const meta=await fileSave(f);
+  carDraft.photo=meta.id;
+  renderCarModal();
+}
+function clearCarPhoto(){
+  if(carDraft.photo)fileDel(carDraft.photo);
+  carDraft.photo=null;
+  renderCarModal();
+}
+function saveCar(){
+  syncCar();
+  carDraft.odometer=+carDraft.odometer||0;
+  state.car=carDraft;
+  save();closeModal();render();
+  toast("🚗 Карточка сохранена");
+}
+
+/* ================================================================ НАСТРОЙКИ */
+function renderSettings(){
+  document.getElementById("tagCount").textContent=state.tags.length;
+  const used=id=>state.expenses.filter(e=>e.tagId===id).length;
+  document.getElementById("tagSettings").innerHTML=
+    state.tags.map(t=>{
+      const on=ALL_FIELDS.filter(f=>t.fields[f.k]).map(f=>f.n.split(" ")[0]);
+      return `
+      <div class="tag-card" style="--tg:${t.color}" onclick="openTagModal('${t.id}')">
+        <div class="stripe"></div>
+        <div class="tc-in">
+          <div class="tc-top">
+            <div class="tc-ico">${t.icon}</div>
+            <div class="tc-n">${esc(t.name)}</div>
+            <span class="tc-mode ${t.mode}">${t.mode==="simple"?"простой":"сложный"}</span>
+          </div>
+          <div class="tc-f">Поля: ${on.length?esc(on.join(", ")):"только сумма"}<br>
+            <span style="color:var(--txt-dim);">Записей: ${used(t.id)}</span></div>
+        </div>
+      </div>`;}).join("")
+    +`<button class="tag-add" onclick="openTagModal()">＋ Новый тег</button>`;
+
+  const c=state.car;
+  document.getElementById("carSettings").innerHTML=`
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:220px;">
+        <div style="font-size:15px;font-weight:700;">${esc(c.name||"Мой автомобиль")}</div>
+        <div style="font-size:13px;color:var(--txt-dim);margin-top:5px;line-height:1.6;">
+          ${c.model?esc(c.model)+(c.year?", "+esc(c.year):"")+"<br>":""}
+          ${c.plate?"Госномер: "+esc(c.plate)+"<br>":""}
+          ${c.vin?"VIN: "+esc(c.vin)+"<br>":""}
+          Пробег: ${c.odometer?km(c.odometer)+" км":"не указан"}
+        </div>
+      </div>
+      <button class="btn ghost sm" onclick="openCarModal()">✏️ Редактировать</button>
+    </div>`;
+}
+let tagDraft=null,tagEditing=false;
+function openTagModal(id){
+  if(id){
+    tagDraft=JSON.parse(JSON.stringify(state.tags.find(t=>t.id===id)));
+    tagEditing=true;
+  }else{
+    tagDraft={id:uid(),name:"",icon:"🏷️",color:COLORS[0],mode:"simple",autoTitle:"",
+      fields:{items:false,place:false,odometer:false,liters:false,files:true,note:true}};
+    tagEditing=false;
+  }
+  renderTagModal();
+}
+function syncTag(){
+  const q=i=>document.getElementById(i);
+  if(q("t-name"))tagDraft.name=q("t-name").value;
+  if(q("t-icon"))tagDraft.icon=q("t-icon").value;
+  if(q("t-auto"))tagDraft.autoTitle=q("t-auto").value;
+}
+function setTagMode(m){
+  syncTag();
+  tagDraft.mode=m;
+  // разумные значения по умолчанию под режим
+  if(m==="complex"){tagDraft.fields.items=true;tagDraft.fields.place=true;tagDraft.fields.odometer=true;tagDraft.fields.files=true;tagDraft.fields.note=true;}
+  else{tagDraft.fields.items=false;}
+  renderTagModal();
+}
+function setTagColor(c){syncTag();tagDraft.color=c;renderTagModal();}
+function toggleField(k){syncTag();tagDraft.fields[k]=!tagDraft.fields[k];renderTagModal();}
+function renderTagModal(){
+  const used=state.expenses.filter(e=>e.tagId===tagDraft.id).length;
+  document.getElementById("modalRoot").innerHTML=`
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-head">
+          <h3>${tagEditing?"Настройка тега":"Новый тег"}</h3>
+          <p>Режим определяет, какая форма откроется при добавлении расхода</p>
+        </div>
+        <div class="modal-body">
+          <div class="row2">
+            <div class="field"><label>Название</label>
+              <input id="t-name" value="${esc(tagDraft.name)}" placeholder="Например: Эвакуатор" oninput="syncTag()"></div>
+            <div class="field"><label>Иконка (эмодзи)</label>
+              <input id="t-icon" value="${esc(tagDraft.icon)}" placeholder="🏷️" maxlength="4" oninput="syncTag()"></div>
+          </div>
+
+          <div class="field"><label>Цвет бирки</label>
+            <div class="swatches">
+              ${COLORS.map(c=>`<button class="${c===tagDraft.color?"on":""}" style="background:${c}" onclick="setTagColor('${c}')"></button>`).join("")}
+            </div>
+            <div style="margin-top:12px;"><span class="tag lg" style="--tg:${tagDraft.color}">${tagDraft.icon||"🏷️"} ${esc(tagDraft.name||"Название тега")}</span></div>
+          </div>
+
+          <div class="field"><label>Режим</label>
+            <div class="seg">
+              <button class="${tagDraft.mode==="simple"?"on":""}" onclick="setTagMode('simple')">⚡ Простой<br>
+                <span style="font-weight:500;font-size:11px;color:var(--txt-faint);">цена + комментарий</span></button>
+              <button class="${tagDraft.mode==="complex"?"on":""}" onclick="setTagMode('complex')">🧰 Сложный<br>
+                <span style="font-weight:500;font-size:11px;color:var(--txt-faint);">акт: детали и работы</span></button>
+            </div>
+          </div>
+
+          <div class="field"><label>Наименование по умолчанию</label>
+            <input id="t-auto" value="${esc(tagDraft.autoTitle)}" placeholder="${esc(tagDraft.name||"Подставится в поле «Наименование»")}" oninput="syncTag()">
+            <div class="hint">Подставляется автоматически сразу после выбора тега — остаётся вписать только цену.</div>
+          </div>
+
+          <div class="field"><label>Поля в форме расхода</label>
+            <div class="checks">
+              ${ALL_FIELDS.map(f=>`
+                <div class="chk ${tagDraft.fields[f.k]?"on":""}" onclick="toggleField('${f.k}')">
+                  <span class="bx">${tagDraft.fields[f.k]?"✓":""}</span>${esc(f.n)}
+                </div>`).join("")}
+            </div>
+            <div class="hint">Сумма и дата есть всегда. Если включены «Позиции» — сумма считается по ним автоматически.</div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          ${tagEditing?`<button class="link-danger" onclick="delTag('${tagDraft.id}')">Удалить${used?` (${used} записей)`:""}</button>`:""}
+          <button class="btn ghost" onclick="closeModal()">Отмена</button>
+          <button class="btn" onclick="saveTag()">Сохранить</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveTag(){
+  syncTag();
+  if(!tagDraft.name.trim()){toast("Впишите название тега");return;}
+  if(!tagDraft.icon.trim())tagDraft.icon="🏷️";
+  if(!tagDraft.autoTitle.trim())tagDraft.autoTitle=tagDraft.name.trim();
+  tagDraft.name=tagDraft.name.trim();
+  const i=state.tags.findIndex(t=>t.id===tagDraft.id);
+  if(i>=0)state.tags[i]=tagDraft; else state.tags.push(tagDraft);
+  save();closeModal();render();
+  toast("🏷️ Тег сохранён");
+}
+function delTag(id){
+  const used=state.expenses.filter(e=>e.tagId===id).length;
+  if(used){
+    if(!confirm(`С этим тегом ${used} записей. Удалить тег? Записи останутся, но потеряют тег.`))return;
+  }else if(!confirm("Удалить тег?"))return;
+  state.tags=state.tags.filter(t=>t.id!==id);
+  save();closeModal();render();
+  toast("🗑️ Тег удалён");
+}
+
+/* ================================================================ ДАННЫЕ */
+function download(name,content,type){
+  const b=new Blob([content],{type});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportJSON(){
+  download(`moy-avto-${dstr(today())}.json`,JSON.stringify(state,null,2),"application/json");
+  toast("💾 Резервная копия выгружена");
+}
+function exportCSV(){
+  const rows=[["Дата","Тег","Наименование","Позиции","Место","Пробег, км","Литры","Сумма, ₽","Комментарий"]];
+  state.expenses.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+    const t=tagById(e.tagId);
+    const items=(e.items||[]).map(i=>`${i.kind==="work"?"работа":"деталь"}: ${i.name} × ${num(i.qty)} = ${money((+i.qty||0)*(+i.price||0))}`).join("; ");
+    rows.push([e.date,t.name,e.title,items,e.place||"",e.odometer||"",e.liters||"",expTotal(e),e.note||""]);
+  });
+  const csv="﻿"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(";")).join("\n");
+  download(`moy-avto-${dstr(today())}.csv`,csv,"text/csv;charset=utf-8");
+  toast("📊 CSV выгружен");
+}
+function importJSON(input){
+  const f=input.files[0];
+  if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const d=JSON.parse(rd.result);
+      if(!d.expenses||!d.tags)throw new Error("не тот формат");
+      if(!confirm(`Восстановить ${d.expenses.length} расходов и ${d.tags.length} тегов? Текущие данные будут заменены.`))return;
+      state=ensure(d);save();render();
+      toast("📥 Данные восстановлены");
+    }catch(e){toast("⚠️ Файл не подходит: "+e.message);}
+    input.value="";
+  };
+  rd.readAsText(f);
+}
+
+/* ================================================================ СТАРТ */
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&document.getElementById("modalRoot").innerHTML)closeModal();
+  if((e.metaKey||e.ctrlKey)&&e.key==="n"){e.preventDefault();openExpenseModal();}
+});
+buildPeriodSelect();
+render();
+syncInit();
+</script>
+</body>
+</html>

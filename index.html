@@ -531,7 +531,7 @@ const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const SB_SPACE="moy-avto-4c1f9a2e";       // общее пространство (тестовое)
 const TS_KEY="moy_avto_ts";
 let localTs=+(localStorage.getItem(TS_KEY)||0);
-let applyingRemote=false, pushTimer=null;
+let applyingRemote=false, pushTimer=null, dirty=false;
 
 function sbHeaders(extra){
   return Object.assign({"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"},extra||{});
@@ -543,6 +543,7 @@ async function syncPull(){
     const r=await fetch(`${SB_URL}/rest/v1/moy_avto?space=eq.${encodeURIComponent(SB_SPACE)}&select=data,updated_at`,{headers:sbHeaders()});
     if(!r.ok){syncStatus("⚠︎ офлайн");return;}
     const rows=await r.json();
+    if(dirty){syncStatus("☁︎ синхрон");return;}   // есть неотправленные правки — не затираем их облаком
     if(!rows.length){scheduleSyncPush(true);syncStatus("☁︎ синхрон");return;}   // в облаке пусто — зальём своё
     const remoteTs=new Date(rows[0].updated_at).getTime();
     // защита: первый синхрон устройства с реальными (не демо) данными — отправляем своё, не затираем
@@ -563,15 +564,19 @@ async function syncPull(){
 
 async function syncPushNow(){
   try{
-    const body=JSON.stringify([{space:SB_SPACE,data:state,updated_at:new Date(localTs).toISOString()}]);
-    const r=await fetch(`${SB_URL}/rest/v1/moy_avto`,{method:"POST",headers:sbHeaders({"Prefer":"resolution=merge-duplicates,return=minimal"}),body});
-    syncStatus(r.ok?"☁︎ синхрон":"⚠︎ ошибка");
+    const body=JSON.stringify([{space:SB_SPACE,data:state}]);   // время ставит сервер (один источник для всех)
+    const r=await fetch(`${SB_URL}/rest/v1/moy_avto`,{method:"POST",headers:sbHeaders({"Prefer":"resolution=merge-duplicates,return=representation"}),body});
+    if(r.ok){
+      const rows=await r.json();
+      if(rows.length){localTs=new Date(rows[0].updated_at).getTime();localStorage.setItem(TS_KEY,String(localTs));}
+      dirty=false;
+      syncStatus("☁︎ синхрон");
+    }else syncStatus("⚠︎ ошибка");
   }catch(e){syncStatus("⚠︎ офлайн");}
 }
 
 function scheduleSyncPush(immediate){
-  localTs=Date.now();
-  localStorage.setItem(TS_KEY,String(localTs));
+  dirty=true;
   clearTimeout(pushTimer);
   pushTimer=setTimeout(syncPushNow,immediate?0:800);
 }

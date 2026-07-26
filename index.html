@@ -126,6 +126,14 @@
   .tb-name .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
   .tb-bar{flex:1;height:8px;background:var(--bg-soft);border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line);}
 
+  /* ============ КНОПКА ОБНОВЛЕНИЯ СИНХРОНА ============ */
+  .sync-btn{position:fixed;top:14px;right:16px;z-index:70;width:38px;height:38px;border-radius:11px;
+    background:var(--card);box-shadow:inset 0 0 0 1px var(--line),var(--shadow);color:var(--txt-dim);
+    font-size:19px;display:grid;place-items:center;transition:.15s;}
+  .sync-btn:hover{color:var(--txt);background:var(--card-2);transform:translateY(-1px);}
+  .sync-btn.spin{color:var(--accent);animation:syncspin .8s linear infinite;}
+  @keyframes syncspin{to{transform:rotate(360deg);}}
+
   /* ============ МОБИЛЬНАЯ РАСКЛАДКА (телефон) ============ */
   @media (max-width:700px){
     body{flex-direction:column;}
@@ -319,6 +327,8 @@
 </style>
 </head>
 <body>
+
+  <button id="syncBtn" class="sync-btn" title="Обновить синхронизацию" onclick="syncNow()">⟳</button>
 
   <aside class="sidebar">
     <div class="brand">
@@ -542,6 +552,14 @@ function scheduleSyncPush(immediate){
   pushTimer=setTimeout(syncPushNow,immediate?0:800);
 }
 
+async function syncNow(){
+  const b=document.getElementById("syncBtn");
+  if(b)b.classList.add("spin");
+  await syncPull();
+  if(b)b.classList.remove("spin");
+  toast("🔄 Обновлено");
+}
+
 function syncInit(){
   syncPull();
   setInterval(syncPull,15000);                       // подтягивать изменения с других устройств
@@ -672,7 +690,8 @@ function renderCarCard(){
   const all=state.expenses;
   const total=all.reduce((a,e)=>a+expTotal(e),0);
   const odos=all.filter(e=>+e.odometer>0).map(e=>+e.odometer);
-  const curOdo=Math.max(+c.odometer||0,odos.length?Math.max(...odos):0);
+  // заданный вручную пробег — главный; если не задан, берём максимум из записей
+  const curOdo=+c.odometer>0?+c.odometer:(odos.length?Math.max(...odos):0);
   const minOdo=odos.length?Math.min(...odos):0;
   const span=curOdo&&minOdo&&curOdo>minOdo?curOdo-minOdo:0;
   const perKm=span?total/span:0;

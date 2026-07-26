@@ -711,7 +711,7 @@ function inRange(e,r){
   if(r.to&&d>r.to)return false;
   return true;
 }
-function scoped(r){return state.expenses.filter(e=>inRange(e,r)).sort((a,b)=>b.date.localeCompare(a.date)||0);}
+function scoped(r){return state.expenses.filter(e=>inRange(e,r)).sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt||0)-(a.createdAt||0));}
 
 /* ================================================================ КАРТОЧКА АВТО */
 function renderCarCard(){
@@ -1232,6 +1232,7 @@ function saveExpense(){
   draft.items=(draft.items||[]).filter(i=>i.name.trim()||+i.price>0)
     .map(i=>({kind:i.kind,name:i.name.trim(),qty:+i.qty||1,price:+i.price||0}));
   const idx=state.expenses.findIndex(e=>e.id===draft.id);
+  if(idx<0 && !draft.createdAt)draft.createdAt=Date.now();   // время добавления — для порядка внутри дня
   if(idx>=0)state.expenses[idx]=draft; else state.expenses.push(draft);
   // подтягиваем пробег авто, если он больше текущего
   if(draft.odometer>(+state.car.odometer||0))state.car.odometer=draft.odometer;
